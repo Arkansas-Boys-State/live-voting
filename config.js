@@ -36,8 +36,8 @@ const ELECTION_CONFIG = {
   //    { "nationalist": [], "federalist": [] }
   // 3. Copy your Bin ID and API key below
   jsonbin: {
-    binId:  "YOUR_BIN_ID_HERE",       // e.g. "6643abc123def456"
-    apiKey: "YOUR_API_KEY_HERE",       // starts with $2b$10$...
+    binId:  "6a13d1006610dd3ae89f488b",       // e.g. "6643abc123def456"
+    apiKey: "$2a$10$Nrd5c.OOwQZzpx4Ba5AWrOxsQJHBTsYi18eyT0wC/5yb0R5KRuCRi",       // starts with $2b$10$...
     // Poll interval for display pages (milliseconds)
     pollInterval: 4000,
   },
