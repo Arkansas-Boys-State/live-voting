@@ -143,15 +143,25 @@ body::after {
   animation: spin 60s linear infinite;
 }
 .idle-emblem::before {
-  content:'· · · · · · · · · · · · · · · ·';
-  position:absolute; inset:8px;
-  border:1px solid rgba(26,79,138,0.15);
-  border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-size:16px; letter-spacing:10px;
-  color:rgba(200,169,106,0.3);
-  animation:spin 60s linear infinite reverse;
-  text-align:center; line-height:260px;
+  content: '· · · · · · · · · · · · · · · ·';
+  position: absolute; 
+  inset: 8px;
+  border: 1px solid rgba(26, 79, 138, 0.15);
+  border-radius: 50%;
+  
+  /* Modern Centering Layout */
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  text-align: center;
+  
+  /* Text adjustments to balance the scaling */
+  font-size: 24px; 
+  letter-spacing: 12px;
+  padding-left: 12px; /* Offsets letter-spacing to prevent lopsidedness */
+  color: rgba(200, 169, 106, 0.3);
+  
+  animation: spin 60s linear infinite reverse;
 }
 @keyframes spin { to{ transform:rotate(360deg); } }
 
