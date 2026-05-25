@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Bulk Upload Voters</title>
+    <!-- Include SheetJS Library to read Excel/CSV files -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+    <h2>Bulk Upload Voter Roster</h2>
+    <p>Upload an Excel (.xlsx) or .csv file. Columns must match your Google Sheet exactly (ID, Name, Email, City, County, Has_Voted).</p>
+    
+    <input type="file" id="spreadsheetInput" accept=".xlsx, .xls, .csv" />
+    <button onclick="uploadFile()">Upload to System</button>
+    
+    <div id="statusMessage" style="margin-top: 15px; font-weight: bold;"></div>
+
+    <script>
+        const APPS_SCRIPT_URL = "YOUR_DEPLOYED_WEB_APP_URL_HERE";
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('spreadsheetInput');
+            const statusDiv = document.getElementById('statusMessage');
+            
+            if (fileInput.files.length === 0) {
+                statusDiv.innerText = "Please select a file first.";
+                return;
+            }
+
+            const file = fileInput.files[0];
+            statusDiv.innerText = "Reading file...";
+
+            const reader = new FileReader();
+            
+            // This triggers once the browser finishes reading the file from disk
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Grab the very first sheet inside the uploaded workbook
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // Convert rows to a clean array of arrays (skipping the header row)
+                    const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    const cleanRows = jsonRows.slice(1); // Removes the top header row [0]
+
+                    statusDiv.innerText = "Uploading data to Google Sheets...";
+
+                    // Send the data package over to Google Apps Script
+                    const response = await fetch(APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: { 'Content-Type': 'text/plain' }, // Using text/plain avoids CORS preflight traps
+                        body: JSON.stringify({
+                            action: "uploadVoters",
+                            data: cleanRows
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        statusDiv.style.color = "green";
+                        statusDiv.innerText = result.message;
+                    } else {
+                        statusDiv.style.color = "red";
+                        statusDiv.innerText = "Error: " + result.error;
+                    }
+
+                } catch (err) {
+                    statusDiv.style.color = "red";
+                    statusDiv.innerText = "Failed to process file: " + err.message;
+                }
+            };
+
+            // Read the file as a binary array buffer
+            reader.readAsArrayBuffer(file);
+        }
+    </script>
+    <script src="admin.js"></script>
+</body>
+</html>
