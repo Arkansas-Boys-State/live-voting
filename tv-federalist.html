@@ -242,17 +242,17 @@ body::after {
 
 /* Bottom bar */
 .bottom-bar {
-  height:44px; background:var(--surface);
+  height:64px; background:var(--surface);
   border-top:1px solid rgba(200,169,106,0.1);
   display:flex; align-items:center; justify-content:space-between;
-  padding:0 28px 0 36px;
+  padding:0 36px 0 36px;
   flex-shrink:0; position:relative; z-index:10;
   margin-bottom: 6px; /* Offset for bottom gradient bar */
 }
 
 .countdown-wrap { display:flex; align-items:center; gap:10px; }
-.countdown-label { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--fg-dim); }
-#countdownNum { font-size:14px; font-weight:700; color:var(--party-light); min-width:24px; }
+.countdown-label { font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--fg-dim); }
+#countdownNum { font-size:18px; font-weight:700; color:var(--party-light); min-width:24px; }
 
 .timer-track { width:180px; height:3px; background:rgba(200,169,106,0.12); border-radius:2px; overflow:hidden; }
 .timer-fill { height:100%; width:100%; background:linear-gradient(90deg,var(--party),var(--party-light)); transform-origin:left; transition:none; }
@@ -260,10 +260,10 @@ body::after {
 
 .live-dot {
   display:flex; align-items:center; gap:8px;
-  font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--fg-dim);
+  font-size:14px; letter-spacing:3px; text-transform:uppercase; color:var(--fg-dim);
 }
 .live-dot::before {
-  content:''; width:6px; height:6px; border-radius:50%; background:var(--party);
+  content:''; width:8px; height:8px; border-radius:50%; background:var(--party);
   animation:dotPulse 2s ease-in-out infinite;
 }
 
@@ -323,9 +323,9 @@ body::after {
 </div>
 
 <div class="bottom-bar">
-  <div class="live-dot">Live · Polling</div>
+  <div class="live-dot">Live · Registration</div>
   <div class="countdown-wrap">
-    <div class="countdown-label">Resets in</div>
+    <div class="countdown-label">Registration Closes In:</div>
     <div id="countdownNum">—</div>
     <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
   </div>
