@@ -334,7 +334,9 @@ body::after {
 <script>
 const PARTY_KEY = 'federalist';
 const POLL_MS   = 4000;
-const SHOW_MS   = 30000;
+
+// Set the target date and time (12:15 PM CST on May 26, 2026)
+const TARGET_TIME = new Date('2026-05-26T12:15:00-06:00').getTime();
 
 const idle   = document.getElementById('idle');
 const conf   = document.getElementById('confirmation');
@@ -344,7 +346,7 @@ const offEl  = document.getElementById('voterOffice');
 const fill   = document.getElementById('timerFill');
 const numEl  = document.getElementById('countdownNum');
 
-let lastSeen = null, resetTimer = null, countTimer = null;
+let lastSeen = null;
 
 function showVoter(entry) {
   nameEl.textContent  = entry.name   || '—';
@@ -358,32 +360,36 @@ function showVoter(entry) {
   void conf.offsetWidth;
   conf.classList.add('visible');
   conf.style.position = '';
-
-  fill.classList.remove('running');
-  fill.style.transform = 'scaleX(1)';
-  void fill.offsetWidth;
-  fill.classList.add('running');
-
-  let secs = SHOW_MS / 1000;
-  numEl.textContent = secs + 's';
-  if (countTimer) clearInterval(countTimer);
-  countTimer = setInterval(() => {
-    secs--;
-    numEl.textContent = secs > 0 ? secs + 's' : '—';
-    if (secs <= 0) clearInterval(countTimer);
-  }, 1000);
-
-  if (resetTimer) clearTimeout(resetTimer);
-  resetTimer = setTimeout(resetToIdle, SHOW_MS);
 }
 
-function resetToIdle() {
-  conf.classList.remove('visible');
-  idle.classList.remove('hidden');
-  fill.classList.remove('running');
-  fill.style.transform = 'scaleX(1)';
-  numEl.textContent = '—';
+// Global Countdown Timer Logic
+function updateCountdown() {
+  const now = new Date().getTime();
+  const distance = TARGET_TIME - now;
+
+  if (distance < 0) {
+    numEl.textContent = "00:00:00";
+    fill.style.transform = 'scaleX(0)';
+    return;
+  }
+
+  const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+  const hDisplay = hours.toString().padStart(2, '0');
+  const mDisplay = minutes.toString().padStart(2, '0');
+  const sDisplay = seconds.toString().padStart(2, '0');
+
+  numEl.textContent = `${hDisplay}:${mDisplay}:${sDisplay}`;
+
+  const totalWindow = 24 * 60 * 60 * 1000; 
+  const progress = Math.max(0, Math.min(1, distance / totalWindow));
+  fill.style.transform = `scaleX(${progress})`;
 }
+
+setInterval(updateCountdown, 1000);
+updateCountdown();
 
 async function poll() {
   const cfg = ELECTION_CONFIG.jsonbin;
