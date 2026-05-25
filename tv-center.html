@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock Election · Center Display</title>
+<script src="config.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Barlow+Condensed:wght@300;400;600;700;800&display=swap');
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:     #08090F;
+  --gold:   #C8A96A;
+  --gold-l: #E8D09A;
+  --fg:     #F0EDE8;
+  --dim:    rgba(240,237,232,0.4);
+  --nat:    #B22222;
+  --fed:    #1A4F8A;
+}
+
+body {
+  width:100vw; height:100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family:'Barlow Condensed', sans-serif;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  position:relative;
+}
+
+/* Grain */
+body::after {
+  content:''; position:fixed; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:50; opacity:.7;
+}
+
+/* Ambient glows */
+.glow-left {
+  position:fixed; left:-100px; top:50%; transform:translateY(-50%);
+  width:400px; height:600px;
+  background:radial-gradient(ellipse, rgba(178,34,34,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+.glow-right {
+  position:fixed; right:-100px; top:50%; transform:translateY(-50%);
+  width:400px; height:600px;
+  background:radial-gradient(ellipse, rgba(26,79,138,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+/* Grid */
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(200,169,106,0.03) 1px, transparent 1px),
+    linear-gradient(90deg,rgba(200,169,106,0.03) 1px,transparent 1px);
+  background-size:80px 80px;
+  pointer-events:none;
+}
+
+/* Corner frames */
+.corner { position:fixed; width:64px; height:64px; border-color:rgba(200,169,106,0.25); border-style:solid; }
+.c-tl { top:24px; left:24px; border-width:2px 0 0 2px; }
+.c-tr { top:24px; right:24px; border-width:2px 2px 0 0; }
+.c-bl { bottom:24px; left:24px; border-width:0 0 2px 2px; }
+.c-br { bottom:24px; right:24px; border-width:0 2px 2px 0; }
+
+/* Top & bottom rule */
+.h-rule-top, .h-rule-bot {
+  position:fixed; left:0; right:0; height:4px;
+  background:linear-gradient(90deg, var(--nat) 0%, var(--gold) 50%, var(--fed) 100%);
+}
+.h-rule-top { top:0; }
+.h-rule-bot { bottom:0; }
+
+/* Main content */
+.center {
+  display:flex; flex-direction:column;
+  align-items:center; gap:32px;
+  text-align:center;
+  z-index:10; padding:40px;
+  max-width:700px;
+}
+
+/* Logo area */
+.logo-wrap {
+  width:220px; height:220px;
+  border:1.5px solid rgba(200,169,106,0.3);
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+  background:rgba(200,169,106,0.03);
+}
+
+/* Rotating outer ring */
+.logo-ring {
+  position:absolute; inset:-12px;
+  border-radius:50%;
+  border:1px dashed rgba(200,169,106,0.2);
+  animation: spin 60s linear infinite;
+}
+@keyframes spin { to{ transform:rotate(360deg); } }
+
+/* Pulsing glow behind logo */
+.logo-glow {
+  position:absolute; inset:-30px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(200,169,106,0.06) 0%, transparent 70%);
+  animation:breathe 4s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,100%{ transform:scale(1); opacity:.7; }
+  50%{ transform:scale(1.1); opacity:1; }
+}
+
+/* The logo itself — replace img src when ready */
+.logo-img {
+  width:160px; height:160px;
+  object-fit:contain;
+  display:block;
+}
+
+/* Placeholder (shown when no logo) */
+.logo-placeholder {
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+}
+.logo-placeholder .icon { font-size:56px; opacity:.5; }
+.logo-placeholder .hint {
+  font-size:10px; letter-spacing:3px; text-transform:uppercase;
+  color:rgba(200,169,106,0.4);
+}
+
+/* Title block */
+.headline {
+  font-family:'Cormorant Garamond', serif;
+  font-size:clamp(48px,7vw,88px); font-weight:700;
+  line-height:1; letter-spacing:-1px;
+  color:var(--fg);
+}
+.headline em { color:var(--gold); font-style:normal; }
+
+.rule { width:140px; height:1.5px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+
+.tagline {
+  font-size:clamp(12px,1.5vw,16px);
+  letter-spacing:7px; text-transform:uppercase;
+  color:var(--dim); font-weight:300;
+}
+
+/* Party strip */
+.party-strip {
+  display:flex; align-items:center; gap:20px;
+  margin-top:8px;
+}
+
+.party-pill {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 20px;
+  border:1px solid;
+  border-radius:2px;
+  font-size:13px; font-weight:800; letter-spacing:4px; text-transform:uppercase;
+}
+.nat-pill { border-color:rgba(178,34,34,0.4); color:rgba(225,100,90,0.9); background:rgba(178,34,34,0.05); }
+.fed-pill { border-color:rgba(26,79,138,0.4);  color:rgba(74,130,200,0.9); background:rgba(26,79,138,0.05); }
+
+.vs-badge {
+  font-family:'Cormorant Garamond', serif;
+  font-size:22px; font-style:italic; color:var(--gold);
+  opacity:.6;
+}
+
+/* Year */
+.year-ring {
+  border:1px solid rgba(200,169,106,0.25);
+  padding:10px 32px;
+  font-size:13px; font-weight:600; letter-spacing:8px; text-transform:uppercase;
+  color:rgba(200,169,106,0.5);
+}
+
+/* Ticker */
+.ticker-wrap {
+  position:fixed; bottom:12px; left:32px; right:32px;
+  height:20px; overflow:hidden; z-index:20;
+}
+.ticker {
+  display:inline-flex; white-space:nowrap;
+  animation:ticker 35s linear infinite;
+  font-size:11px; letter-spacing:3px; text-transform:uppercase;
+  color:rgba(200,169,106,0.3);
+}
+@keyframes ticker {
+  from{ transform:translateX(100vw); }
+  to{ transform:translateX(-100%); }
+}
+</style>
+</head>
+<body>
+
+<div class="glow-left"></div>
+<div class="glow-right"></div>
+
+<div class="h-rule-top"></div>
+<div class="h-rule-bot"></div>
+
+<div class="corner c-tl"></div>
+<div class="corner c-tr"></div>
+<div class="corner c-bl"></div>
+<div class="corner c-br"></div>
+
+<div class="center">
+
+  <!-- LOGO AREA -->
+  <div class="logo-wrap">
+    <div class="logo-glow"></div>
+    <div class="logo-ring"></div>
+
+    <!--
+      TO ADD YOUR LOGO:
+      1. Upload your logo image to the same GitHub Pages folder
+      2. Uncomment the <img> line below and replace "your-logo.png"
+      3. Delete or comment out the .logo-placeholder div
+    -->
+    <!-- <img class="logo-img" src="your-logo.png" alt="Election Logo"> -->
+
+    <div class="logo-placeholder">
+      <div class="icon">🏛️</div>
+      <div class="hint">Add logo here</div>
+    </div>
+  </div>
+
+  <div class="headline">MOCK<br><em>ELECTION</em></div>
+
+  <div class="rule"></div>
+
+  <div class="tagline">Democracy in Action &nbsp;·&nbsp; 2026</div>
+
+  <div class="party-strip">
+    <div class="party-pill nat-pill">Nationalist</div>
+    <div class="vs-badge">vs</div>
+    <div class="party-pill fed-pill">Federalist</div>
+  </div>
+
+  <div class="year-ring">Polling Station · Center Display</div>
+</div>
+
+<div class="ticker-wrap">
+  <div class="ticker">
+    MOCK ELECTION 2026 &nbsp;&nbsp;·&nbsp;&nbsp; POLLS NOW OPEN &nbsp;&nbsp;·&nbsp;&nbsp; CAST YOUR BALLOT &nbsp;&nbsp;·&nbsp;&nbsp; EVERY VOTE COUNTS &nbsp;&nbsp;·&nbsp;&nbsp; DEMOCRACY IN ACTION &nbsp;&nbsp;·&nbsp;&nbsp; MOCK ELECTION 2026 &nbsp;&nbsp;·&nbsp;&nbsp; POLLS NOW OPEN &nbsp;&nbsp;·&nbsp;&nbsp; CAST YOUR BALLOT &nbsp;&nbsp;·&nbsp;&nbsp; EVERY VOTE COUNTS &nbsp;&nbsp;·&nbsp;&nbsp;
+  </div>
+</div>
+
+</body>
+</html>

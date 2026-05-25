@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock Election · Setup Guide</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Barlow+Condensed:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#08090F;--surface:#10121C;--border:rgba(200,169,106,0.15);
+  --gold:#C8A96A;--gold-l:#E8D09A;--fg:#F0EDE8;--dim:rgba(240,237,232,0.5);
+  --nat:#E8534A;--fed:#4A82C8;--green:#4CAF86;
+}
+body{background:var(--bg);color:var(--fg);font-family:'Barlow Condensed',sans-serif;
+  max-width:860px;margin:0 auto;padding:48px 32px;line-height:1.6;}
+h1{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:700;
+  color:var(--gold);letter-spacing:-1px;margin-bottom:4px;}
+.subtitle{font-size:13px;letter-spacing:5px;text-transform:uppercase;color:var(--dim);margin-bottom:40px;}
+.rule{height:1px;background:linear-gradient(90deg,var(--gold),transparent);margin-bottom:40px;}
+
+h2{font-size:22px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold-l);margin:40px 0 16px;padding-bottom:10px;
+  border-bottom:1px solid var(--border);}
+h3{font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--fg);margin:24px 0 10px;}
+
+p{font-size:16px;color:var(--dim);margin-bottom:12px;}
+p strong{color:var(--fg);}
+
+.step{display:flex;gap:20px;margin-bottom:20px;padding:20px;
+  background:var(--surface);border:1px solid var(--border);border-radius:3px;}
+.step-num{
+  min-width:36px;height:36px;border-radius:50%;
+  background:var(--gold);color:#08090F;
+  font-weight:800;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.step-body{flex:1;}
+.step-title{font-size:17px;font-weight:700;color:var(--fg);margin-bottom:6px;}
+.step-desc{font-size:15px;color:var(--dim);}
+.step-desc strong{color:var(--fg);}
+
+code{font-family:'Source Code Pro',monospace;font-size:13px;
+  background:rgba(200,169,106,0.1);color:var(--gold-l);
+  padding:2px 8px;border-radius:2px;}
+
+pre{background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:3px;
+  padding:16px 20px;margin:12px 0;overflow-x:auto;}
+pre code{background:none;padding:0;font-size:13px;color:var(--gold-l);}
+
+.file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin:16px 0;}
+.file-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:16px;}
+.file-name{font-family:'Source Code Pro',monospace;font-size:14px;color:var(--gold);margin-bottom:6px;}
+.file-desc{font-size:14px;color:var(--dim);}
+
+.tv-diagram{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:16px 0;}
+.tv-box{padding:20px 12px;border-radius:3px;text-align:center;}
+.tv-nat{background:rgba(178,34,34,0.1);border:1px solid rgba(178,34,34,0.3);}
+.tv-mid{background:rgba(200,169,106,0.06);border:1px solid rgba(200,169,106,0.2);}
+.tv-fed{background:rgba(26,79,138,0.1);border:1px solid rgba(26,79,138,0.3);}
+.tv-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:6px;}
+.tv-name{font-size:16px;font-weight:700;margin-bottom:4px;}
+.tv-file{font-family:'Source Code Pro',monospace;font-size:12px;color:var(--gold);}
+
+.tip{background:rgba(76,175,134,0.08);border:1px solid rgba(76,175,134,0.25);
+  border-radius:3px;padding:14px 18px;margin:16px 0;font-size:15px;color:rgba(76,175,134,0.9);}
+.tip strong{color:var(--green);}
+
+.warn{background:rgba(200,169,106,0.06);border:1px solid rgba(200,169,106,0.25);
+  border-radius:3px;padding:14px 18px;margin:16px 0;font-size:15px;color:var(--dim);}
+.warn strong{color:var(--gold);}
+
+.zap-table{width:100%;border-collapse:collapse;margin:12px 0;}
+.zap-table th{background:rgba(200,169,106,0.1);color:var(--gold);font-size:12px;
+  letter-spacing:3px;text-transform:uppercase;padding:10px 14px;text-align:left;
+  border-bottom:1px solid var(--border);}
+.zap-table td{padding:10px 14px;font-size:15px;color:var(--dim);
+  border-bottom:1px solid rgba(200,169,106,0.07);}
+.zap-table td strong{color:var(--fg);}
+.zap-table tr:last-child td{border-bottom:none;}
+</style>
+</head>
+<body>
+
+<h1>Mock Election</h1>
+<div class="subtitle">Complete Setup Guide &nbsp;·&nbsp; Google Sheets + Zapier + JSONBin + GitHub Pages</div>
+<div class="rule"></div>
+
+<!-- TV LAYOUT -->
+<h2>TV Layout</h2>
+<div class="tv-diagram">
+  <div class="tv-box tv-nat">
+    <div class="tv-label">TV 1 · Left</div>
+    <div class="tv-name" style="color:#E8534A">Nationalist</div>
+    <div class="tv-file">tv-nationalist.html</div>
+  </div>
+  <div class="tv-box tv-mid">
+    <div class="tv-label">TV 2 · Center</div>
+    <div class="tv-name" style="color:#C8A96A">Logo Display</div>
+    <div class="tv-file">tv-center.html</div>
+  </div>
+  <div class="tv-box tv-fed">
+    <div class="tv-label">TV 3 · Right</div>
+    <div class="tv-name" style="color:#4A82C8">Federalist</div>
+    <div class="tv-file">tv-federalist.html</div>
+  </div>
+</div>
+
+<!-- FILES -->
+<h2>Files in This Package</h2>
+<div class="file-grid">
+  <div class="file-card"><div class="file-name">config.js</div><div class="file-desc">All settings: party colors, JSONBin credentials, poll interval. Edit this first.</div></div>
+  <div class="file-card"><div class="file-name">tv-nationalist.html</div><div class="file-desc">Left TV display — shows confirmed Nationalist voter name + info.</div></div>
+  <div class="file-card"><div class="file-name">tv-center.html</div><div class="file-desc">Center TV — logo/branding display with party names.</div></div>
+  <div class="file-card"><div class="file-name">tv-federalist.html</div><div class="file-desc">Right TV display — shows confirmed Federalist voter name + info.</div></div>
+  <div class="file-card"><div class="file-name">SETUP.html</div><div class="file-desc">This guide.</div></div>
+</div>
+
+<!-- STEP 1: JSONBin -->
+<h2>Step 1 · Set Up JSONBin (Data Store)</h2>
+<p>JSONBin is a free service that stores JSON data at a URL. Zapier writes to it; your TVs read from it.</p>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <div class="step-title">Create a free account at jsonbin.io</div>
+    <div class="step-desc">Go to <strong>https://jsonbin.io</strong> → Sign Up (free tier is enough).</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <div class="step-title">Create a new Bin</div>
+    <div class="step-desc">Click <strong>+ New Bin</strong>. Paste this as the initial JSON content:</div>
+  </div>
+</div>
+<pre><code>{ "nationalist": [], "federalist": [] }</code></pre>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <div class="step-title">Copy your Bin ID and API Key</div>
+    <div class="step-desc">The Bin ID is in the URL: <code>jsonbin.io/b/<strong>YOUR_BIN_ID</strong></code>. Your API Key is under Account → API Keys.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <div class="step-title">Edit config.js</div>
+    <div class="step-desc">Open <code>config.js</code> and fill in <code>binId</code> and <code>apiKey</code>.</div>
+  </div>
+</div>
+
+<!-- STEP 2: Google Sheets -->
+<h2>Step 2 · Set Up Google Sheets</h2>
+<p>Create one Google Sheet with two tabs — one per party.</p>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <div class="step-title">Create a new Google Sheet</div>
+    <div class="step-desc">Name the file <strong>Mock Election Check-In</strong>.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <div class="step-title">Add two tabs with these exact names</div>
+    <div class="step-desc"><strong>Nationalist</strong> and <strong>Federalist</strong></div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <div class="step-title">Add these column headers in Row 1 of each tab</div>
+    <div class="step-desc">Column A: <strong>Name</strong> &nbsp;·&nbsp; Column B: <strong>Party</strong> &nbsp;·&nbsp; Column C: <strong>Office</strong> &nbsp;·&nbsp; Column D: <strong>Timestamp</strong></div>
+  </div>
+</div>
+
+<div class="tip"><strong>Tip:</strong> Staff enter data starting at Row 2. Each new row triggers Zapier automatically.</div>
+
+<!-- STEP 3: Zapier -->
+<h2>Step 3 · Set Up Zapier (Two Zaps)</h2>
+<p>Create <strong>one Zap per party</strong> — they watch different sheet tabs and write to different keys in JSONBin.</p>
+
+<h3>Zap 1 — Nationalist Party</h3>
+<table class="zap-table">
+  <tr><th>Setting</th><th>Value</th></tr>
+  <tr><td>Trigger App</td><td><strong>Google Sheets</strong></td></tr>
+  <tr><td>Trigger Event</td><td><strong>New Spreadsheet Row</strong></td></tr>
+  <tr><td>Spreadsheet</td><td><strong>Mock Election Check-In</strong></td></tr>
+  <tr><td>Worksheet Tab</td><td><strong>Nationalist</strong></td></tr>
+  <tr><td>Action App</td><td><strong>Webhooks by Zapier</strong></td></tr>
+  <tr><td>Action Event</td><td><strong>PUT</strong></td></tr>
+  <tr><td>URL</td><td><code>https://api.jsonbin.io/v3/b/YOUR_BIN_ID</code></td></tr>
+  <tr><td>Payload Type</td><td><strong>JSON</strong></td></tr>
+  <tr><td>Data (Body)</td><td>See JSON template below</td></tr>
+  <tr><td>Headers</td><td><code>X-Master-Key</code> → your API key &nbsp;·&nbsp; <code>Content-Type</code> → <code>application/json</code></td></tr>
+</table>
+
+<p><strong>Body template for Zap 1</strong> — paste this into the Webhooks Data field, mapping Zapier fields:</p>
+<pre><code>{
+  "nationalist": [
+    {
+      "name":  "[[Name from Google Sheets]]",
+      "party": "Nationalist",
+      "office":"[[Office from Google Sheets]]",
+      "ts":    "[[Timestamp from Google Sheets]]"
+    }
+  ],
+  "federalist": []
+}</code></pre>
+
+<div class="warn"><strong>Note:</strong> JSONBin PUT replaces the entire bin. For a real multi-entry log you'd use a webhook to a more advanced store, but for a live confirmation display (showing just the latest entry) this approach works perfectly.</div>
+
+<h3>Zap 2 — Federalist Party</h3>
+<p>Identical to Zap 1, but watch the <strong>Federalist</strong> tab and swap the keys in the body:</p>
+<pre><code>{
+  "nationalist": [],
+  "federalist": [
+    {
+      "name":  "[[Name from Google Sheets]]",
+      "party": "Federalist",
+      "office":"[[Office from Google Sheets]]",
+      "ts":    "[[Timestamp from Google Sheets]]"
+    }
+  ]
+}</code></pre>
+
+<!-- STEP 4: GitHub Pages -->
+<h2>Step 4 · Deploy to GitHub Pages</h2>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <div class="step-title">Create a free GitHub account & new repository</div>
+    <div class="step-desc">Go to <strong>github.com</strong> → New Repository → name it <strong>mock-election</strong> → set to Public.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <div class="step-title">Upload all 5 files</div>
+    <div class="step-desc">Drag and drop into the repo: <code>config.js</code>, <code>tv-nationalist.html</code>, <code>tv-center.html</code>, <code>tv-federalist.html</code>, <code>SETUP.html</code></div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <div class="step-title">Enable GitHub Pages</div>
+    <div class="step-desc">Settings → Pages → Source: <strong>Deploy from a branch</strong> → Branch: <strong>main</strong> → Folder: <strong>/ (root)</strong> → Save.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <div class="step-title">Your URLs will be:</div>
+    <div class="step-desc">
+      <code>https://YOUR-USERNAME.github.io/mock-election/tv-nationalist.html</code><br><br>
+      <code>https://YOUR-USERNAME.github.io/mock-election/tv-center.html</code><br><br>
+      <code>https://YOUR-USERNAME.github.io/mock-election/tv-federalist.html</code>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 5: AbleSigns -->
+<h2>Step 5 · Configure AbleSigns</h2>
+<p>Point each TV to its URL in AbleSigns using the "Web Page" or "URL" content type.</p>
+
+<table class="zap-table">
+  <tr><th>TV</th><th>AbleSigns URL</th></tr>
+  <tr><td><strong>TV 1 (Left)</strong></td><td><code>…/tv-nationalist.html</code></td></tr>
+  <tr><td><strong>TV 2 (Center)</strong></td><td><code>…/tv-center.html</code></td></tr>
+  <tr><td><strong>TV 3 (Right)</strong></td><td><code>…/tv-federalist.html</code></td></tr>
+</table>
+
+<div class="tip"><strong>Set AbleSigns to refresh the page every 60 seconds</strong> as a fallback — the JS polls every 4 seconds automatically, but this keeps things clean if the browser ever stalls.</div>
+
+<!-- STEP 6: Logo -->
+<h2>Step 6 · Adding Your Logo</h2>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <div class="step-title">Upload your logo image to the GitHub repo</div>
+    <div class="step-desc">Drag your logo file (PNG or SVG recommended) into the repo. Name it something simple like <code>logo.png</code>.</div>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <div class="step-title">Edit tv-center.html</div>
+    <div class="step-desc">Find the comment <code>&lt;!-- TO ADD YOUR LOGO --&gt;</code>, uncomment the <code>&lt;img&gt;</code> line, set <code>src="logo.png"</code>, and delete the placeholder div.</div>
+  </div>
+</div>
+
+<!-- WORKFLOW -->
+<h2>Day-of Workflow</h2>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body"><div class="step-title">Open the Google Sheet on a staff laptop/tablet</div><div class="step-desc">Both Nationalist and Federalist tabs are ready for data entry.</div></div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body"><div class="step-title">When a voter checks in, add a row to the correct tab</div><div class="step-desc">Fill in Name, Party, Office, and Timestamp (or use <code>=NOW()</code>).</div></div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body"><div class="step-title">Zapier fires within ~15 seconds</div><div class="step-desc">It updates JSONBin automatically — no manual action needed.</div></div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body"><div class="step-title">The correct TV lights up with the voter's name</div><div class="step-desc">Displayed for 30 seconds, then returns to idle. The center TV always shows the logo.</div></div>
+</div>
+
+</body>
+</html>
