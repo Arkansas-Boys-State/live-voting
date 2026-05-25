@@ -11,9 +11,9 @@ const ELECTION_CONFIG = {
     nationalist: {
       name:       "Nationalist",
       shortName:  "NAT",
-      color:      "#B22222",   // deep crimson
-      colorLight: "#E8534A",
-      colorDim:   "rgba(178,34,34,0.15)",
+      color:      "#1A4F8A",   // deep crimson
+      colorLight: "#4A82C8",
+      colorDim:   "rgba(26,79,138,0.15)",
       // Replace with your actual logo path or URL:
       // logoUrl: "images/nationalist-logo.png",
       logoUrl:    null,
@@ -21,9 +21,9 @@ const ELECTION_CONFIG = {
     federalist: {
       name:       "Federalist",
       shortName:  "FED",
-      color:      "#1A4F8A",   // presidential navy
-      colorLight: "#4A82C8",
-      colorDim:   "rgba(26,79,138,0.15)",
+      color:      "#B22222",   // presidential navy
+      colorLight: "#E8534A",
+      colorDim:   "rgba(178,34,34,0.15)",
       // Replace with your actual logo path or URL:
       // logoUrl: "images/federalist-logo.png",
       logoUrl:    null,
