@@ -25,6 +25,10 @@
   --blue-vibrant:#3B82F6;
   --blue-dark:   #0B1B33;
 
+  /* Non-Partisan Slate Palette */
+  --slate:       #64748B;
+  --slate-glow:  rgba(100, 116, 139, 0.6);
+
   /* Global scaling matched to previous file layout scale */
   --ui-scale: 1;
 }
@@ -113,7 +117,7 @@ body::after {
 .main {
   flex:1; display:flex; flex-direction:column;
   align-items:center; justify-content:center;
-  padding:60px;
+  padding:40px 60px;
   position:relative;
   max-width:1200px;
   margin: 0 auto;
@@ -134,14 +138,15 @@ body::after {
 /* ── IDLE ── */
 #idle {
   display:flex; flex-direction:column;
-  align-items:center; gap:32px;
+  align-items:center; gap:28px;
   text-align:center;
   transition: opacity .5s ease;
 }
 #idle.hidden { opacity:0; pointer-events:none; position:absolute; }
 
+/* Logo Ring Setup */
 .idle-emblem {
-  width:200px; height:200px; /* Scaled up from 100px */
+  width:280px; height:280px;
   border:2px solid rgba(200,169,106,0.3);
   border-radius:50%;
   display:flex; align-items:center; justify-content:center;
@@ -150,30 +155,39 @@ body::after {
   animation: spin 60s linear infinite;
 }
 .idle-emblem::before {
-  content:'· · · · · · · · · · · ·';
-  position:absolute; inset:6px;
-  border:1px solid rgba(26,79,138,0.2);
+  content:'· · · · · · · · · · · · · · · ·';
+  position:absolute; inset:8px;
+  border:1px solid rgba(26,79,138,0.15);
   border-radius:50%;
   display:flex; align-items:center; justify-content:center;
-  font-size:14px; letter-spacing:8px;
-  color: rgba(200,169,106,0.3);
+  font-size:16px; letter-spacing:10px;
+  color: rgba(200,169,106,0.25);
   animation: spin 60s linear infinite reverse;
-  text-align:center; line-height:184px;
+  text-align:center; line-height:260px;
 }
 @keyframes spin { to{ transform:rotate(360deg); } }
 
-.idle-flag { font-size:72px; animation: spin 60s linear infinite reverse; } /* Scaled up icon */
+/* SVG Logo Styling */
+.idle-logo-svg {
+  width: 150px;       /* Fits neatly within the 280px ring */
+  height: 150px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 15px var(--slate-glow));
+  
+  /* Counter-rotation to keep the logo right side up while ring spins */
+  animation: spin 60s linear infinite reverse; 
+}
 
 .idle-h {
   font-family:'Cormorant Garamond', serif;
-  font-size:clamp(64px, 7vw, 96px); font-weight:700; /* Expanded typographic layout */
+  font-size:clamp(64px, 7vw, 96px); font-weight:700;
   line-height:0.95; color:var(--fg);
   letter-spacing: -1px;
 }
-.idle-h em { color:var(--party); font-style:normal; }
+.idle-h em { color:var(--gold); font-style:normal; }
 
 .idle-rule {
-  width:140px; height:1.5px; /* Expanded lines matching center layout */
+  width:140px; height:1.5px;
   background:linear-gradient(90deg,transparent,var(--gold),transparent);
 }
 
@@ -201,7 +215,7 @@ body::after {
 }
 
 .check-mark {
-  width:96px; height:96px; /* Scaled confirmation circle */
+  width:96px; height:96px;
   border:2px solid var(--party-light);
   border-radius:50%;
   display:flex; align-items:center; justify-content:center;
@@ -315,7 +329,9 @@ body::after {
 
 <div class="main">
   <div id="idle">
-    <div class="idle-emblem"><div class="idle-flag">🦅</div></div>
+    <div class="idle-emblem">
+      <img src="nationalist-logo.svg" alt="Nationalist Party Logo" class="idle-logo-svg">
+    </div>
     <div class="idle-rule"></div>
     <div class="idle-h">NATIONALIST<br><em>PARTY</em></div>
     <div class="idle-rule"></div>
