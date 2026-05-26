@@ -1,85 +1,365 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Admin - Bulk Upload Voters</title>
-    <!-- Include SheetJS Library to read Excel/CSV files -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Database Bulk Upload Control</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Barlow+Condensed:wght@300;400;600;700;800&display=swap');
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:     #08090F;
+  --blue:   #3B82F6;
+  --purple: #8B5CF6;
+  --red:    #EF4444;
+  --gold:   #C8A96A;
+  --gold-l: #E8D09A;
+  --fg:     #F0EDE8;
+  --dim:    rgba(240,237,232,0.4);
+  --ui-scale: 1;
+}
+
+body {
+  width:100vw;
+  height:100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family:'Barlow Condensed', sans-serif;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  font-size: calc(16px * var(--ui-scale));
+}
+
+/* Authentic Grain Mask Layer */
+body::after {
+  content:''; position:fixed; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:50; opacity:.7;
+}
+
+/* Ambient Blue/Red Backlighting */
+.glow-left {
+  position:fixed; left:-100px; top:50%; transform:translateY(-50%);
+  width:400px; height:600px;
+  background:radial-gradient(ellipse, rgba(178,34,34,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+.glow-right {
+  position:fixed; right:-100px; top:50%; transform:translateY(-50%);
+  width:400px; height:600px;
+  background:radial-gradient(ellipse, rgba(26,79,138,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+/* Structural Tech Alignment Grid */
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(200,169,106,0.03) 1px, transparent 1px),
+    linear-gradient(90deg,rgba(200,169,106,0.03) 1px,transparent 1px);
+  background-size:80px 80px;
+  pointer-events:none;
+}
+
+/* Linear Frame Rules */
+.corner { position:fixed; width:64px; height:64px; border-color:rgba(200,169,106,0.25); border-style:solid; }
+.c-tl { top:24px; left:24px; border-width:2px 0 0 2px; }
+.c-tr { top:24px; right:24px; border-width:2px 2px 0 0; }
+.c-bl { bottom:24px; left:24px; border-width:0 0 2px 2px; }
+.c-br { bottom:24px; right:24px; border-width:0 2px 2px 0; }
+
+.h-rule-top, .h-rule-bot {
+  position:fixed; left:0; right:0; height:6px;
+  background:linear-gradient(90deg, var(--blue) 0%, var(--purple) 50%, var(--red) 100%);
+}
+.h-rule-top { top:0; }
+.h-rule-bot { bottom:0; }
+
+/* Dashboard Card UI Box */
+.center {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:24px;
+  text-align:center;
+  z-index:10;
+  padding:40px 60px;
+  width:100%;
+  max-width:750px;
+  background: rgba(13, 15, 24, 0.65);
+  border: 1px solid rgba(200, 169, 106, 0.15);
+  backdrop-filter: blur(12px);
+  border-radius: 8px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+.headline {
+  font-family:'Cormorant Garamond', serif;
+  font-size:clamp(44px, 5vw, 68px);
+  font-weight:700;
+  line-height:0.95;
+  letter-spacing:-1px;
+  color:var(--fg);
+}
+.headline em { color:var(--gold); font-style:normal; }
+.rule { width:140px; height:1.5px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+
+.tagline {
+  font-size:16px;
+  letter-spacing:6px;
+  text-transform:uppercase;
+  color:var(--dim);
+  font-weight:300;
+}
+
+/* File Upload Interactive Elements */
+.upload-zone {
+  width: 100%;
+  border: 2px dashed rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.02);
+  border-radius: 6px;
+  padding: 40px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+.upload-zone:hover {
+  border-color: var(--purple);
+  background: rgba(139, 92, 246, 0.06);
+}
+
+/* Hide native ugly input, layer customized typography over area */
+.upload-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  cursor: pointer;
+}
+
+.upload-icon {
+  font-size: 38px;
+  color: var(--gold);
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.upload-text {
+  font-size: 20px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.file-specs {
+  font-size: 13px;
+  color: var(--dim);
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+/* Action Control Pill Button */
+.btn-submit {
+  display: inline-block;
+  width: 100%;
+  padding: 16px 32px;
+  border: 2px solid rgba(59, 130, 246, 0.6);
+  background: rgba(59, 130, 246, 0.1);
+  color: #B9D4FF;
+  border-radius: 4px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-submit:hover {
+  border-color: var(--blue);
+  background: rgba(59, 130, 246, 0.25);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+}
+.btn-submit:disabled {
+  border-color: rgba(240,237,232,0.1);
+  background: rgba(240,237,232,0.02);
+  color: var(--dim);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* System Monitor / Logging Terminal Box */
+.terminal-status {
+  width: 100%;
+  background: #040508;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 4px;
+  padding: 16px;
+  font-family: monospace;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-align: left;
+  color: #8B5CF6;
+  min-height: 54px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.system-ready { color: #A7F3D0; }
+.system-error { color: #FCA5A5; }
+.system-working { color: #FDE047; }
+
+/* Administrative Authorization Indicator Ring */
+.admin-badge {
+  border: 1px solid rgba(139,92,246,0.35);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(200,169,255,0.75);
+}
+
+/* Ticker Footer styles */
+.ticker-wrap { position:fixed; bottom:20px; left:40px; right:40px; height:40px; overflow:hidden; z-index:20; }
+.ticker { display:inline-flex; white-space:nowrap; animation:ticker 35s linear infinite; font-size:18px; letter-spacing:5px; text-transform:uppercase; color:rgba(180,160,255,0.35); }
+@keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
+
+@media (min-width: 3000px) {
+  :root { --ui-scale: 1.6; }
+  .center { transform: scale(1.1); }
+}
+</style>
 </head>
 <body>
 
-    <h2>Bulk Upload Voter Roster</h2>
-    <p>Upload an Excel (.xlsx) or .csv file. Columns must match your Google Sheet exactly (ID, Name, Email, City, County, Has_Voted).</p>
-    
-    <input type="file" id="spreadsheetInput" accept=".xlsx, .xls, .csv" />
-    <button onclick="uploadFile()">Upload to System</button>
-    
-    <div id="statusMessage" style="margin-top: 15px; font-weight: bold;"></div>
+<div class="glow-left"></div>
+<div class="glow-right"></div>
 
-    <script>
-        const APPS_SCRIPT_URL = "YOUR_DEPLOYED_WEB_APP_URL_HERE";
+<div class="h-rule-top"></div>
+<div class="h-rule-bot"></div>
 
-        async function uploadFile() {
-            const fileInput = document.getElementById('spreadsheetInput');
-            const statusDiv = document.getElementById('statusMessage');
+<div class="corner c-tl"></div>
+<div class="corner c-tr"></div>
+<div class="corner c-bl"></div>
+<div class="corner c-br"></div>
+
+<div class="center">
+  <div class="headline">Database Control<br><em>Bulk Roster Upload</em></div>
+  <div class="rule"></div>
+  <div class="tagline">Authorized Personnel Access Only</div>
+
+  <div class="upload-zone">
+    <div class="upload-icon">⭱</div>
+    <div class="upload-text" id="fileLabel">Select Master Spreadsheet</div>
+    <div class="file-specs">Supports Excel (.xlsx, .xls) and CSV targets</div>
+    <input type="file" id="spreadsheetInput" accept=".xlsx, .xls, .csv" onchange="updateFileLabel()" />
+  </div>
+
+  <button class="btn-submit" id="uploadBtn" onclick="uploadFile()">Execute Pipeline Transmit</button>
+
+  <div class="terminal-status" id="statusMessage">
+    <span class="system-ready">SYSTEM CONFIGURATION ONLINE // TARGET ACQUISITION READY...</span>
+  </div>
+
+  <div class="admin-badge">Secure Administrative Gateway</div>
+</div>
+
+<div class="ticker-wrap">
+  <div class="ticker">
+    SECURE CONTROL PORTAL &nbsp;&nbsp;·&nbsp;&nbsp; AUTHORIZED OPERATORS ONLY &nbsp;&nbsp;·&nbsp;&nbsp; RESTRICTED DIRECTORY ACCESS &nbsp;&nbsp;·&nbsp;&nbsp; AUDIT TRAILS ACTIVE &nbsp;&nbsp;·&nbsp;&nbsp; SECURE CONTROL PORTAL &nbsp;&nbsp;·&nbsp;&nbsp; AUTHORIZED OPERATORS ONLY &nbsp;&nbsp;·&nbsp;&nbsp; RESTRICTED DIRECTORY ACCESS &nbsp;&nbsp;·&nbsp;&nbsp; AUDIT TRAILS ACTIVE &nbsp;&nbsp;·&nbsp;&nbsp;
+  </div>
+</div>
+
+<script>
+// Prompt for security wall right at compilation
+const password = prompt("Provide Administrative Passkey Sequence:");
+if (password !== "YourSecretSuperPassword123") {
+    alert("Access Sequence Rejected.");
+    window.location.href = "../index.html"; 
+}
+
+// Global path config pulling from your config.js script
+const APPS_SCRIPT_URL = "YOUR_DEPLOYED_WEB_APP_URL_HERE";
+
+function updateFileLabel() {
+    const input = document.getElementById('spreadsheetInput');
+    const label = document.getElementById('fileLabel');
+    if(input.files.length > 0) {
+        label.innerText = input.files[0].name;
+        label.style.color = "var(--gold-l)";
+    }
+}
+
+async function uploadFile() {
+    const fileInput = document.getElementById('spreadsheetInput');
+    const statusDiv = document.getElementById('statusMessage');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    if (fileInput.files.length === 0) {
+        statusDiv.innerHTML = '<span class="system-error">CRITICAL WARNING: Target file execution matrix is completely empty.</span>';
+        return;
+    }
+
+    const file = fileInput.files[0];
+    statusDiv.innerHTML = '<span class="system-working">PARSING DATA BLOCKS... READ/WRITE CYCLE MOUNTED.</span>';
+    uploadBtn.disabled = true;
+
+    const reader = new FileReader();
+    
+    reader.onload = async function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
             
-            if (fileInput.files.length === 0) {
-                statusDiv.innerText = "Please select a file first.";
-                return;
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Convert to multidimensional matrix tracking arrays, slicing off header string values
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            const cleanRows = jsonRows.slice(1);
+
+            statusDiv.innerHTML = '<span class="system-working">STREAMING TRANSMISSION PIPELINE LIVE -> GOOGLE CLOUD STORAGE INSTANCE.</span>';
+
+            const response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({
+                    action: "uploadVoters",
+                    data: cleanRows
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                statusDiv.innerHTML = `<span class="system-ready">TRANSMIT COMPLETED SUCCESSFULLY. ${result.message}</span>`;
+                fileInput.value = ""; 
+                document.getElementById('fileLabel').innerText = "Select Master Spreadsheet";
+                document.getElementById('fileLabel').style.color = "var(--fg)";
+            } else {
+                statusDiv.innerHTML = `<span class="system-error">PIPELINE ABORTED SCHEMA REJECTION: ${result.error}</span>`;
             }
 
-            const file = fileInput.files[0];
-            statusDiv.innerText = "Reading file...";
-
-            const reader = new FileReader();
-            
-            // This triggers once the browser finishes reading the file from disk
-            reader.onload = async function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    
-                    // Grab the very first sheet inside the uploaded workbook
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    
-                    // Convert rows to a clean array of arrays (skipping the header row)
-                    const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                    const cleanRows = jsonRows.slice(1); // Removes the top header row [0]
-
-                    statusDiv.innerText = "Uploading data to Google Sheets...";
-
-                    // Send the data package over to Google Apps Script
-                    const response = await fetch(APPS_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: { 'Content-Type': 'text/plain' }, // Using text/plain avoids CORS preflight traps
-                        body: JSON.stringify({
-                            action: "uploadVoters",
-                            data: cleanRows
-                        })
-                    });
-
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        statusDiv.style.color = "green";
-                        statusDiv.innerText = result.message;
-                    } else {
-                        statusDiv.style.color = "red";
-                        statusDiv.innerText = "Error: " + result.error;
-                    }
-
-                } catch (err) {
-                    statusDiv.style.color = "red";
-                    statusDiv.innerText = "Failed to process file: " + err.message;
-                }
-            };
-
-            // Read the file as a binary array buffer
-            reader.readAsArrayBuffer(file);
+        } catch (err) {
+            statusDiv.innerHTML = `<span class="system-error">HARDWARE DESYNC TRAP EXCEPTION: ${err.message}</span>`;
+        } finally {
+            uploadBtn.disabled = false;
         }
-    </script>
-    <script src="admin.js"></script>
+    };
+
+    reader.readAsArrayBuffer(file);
+}
+</script>
+
 </body>
 </html>
