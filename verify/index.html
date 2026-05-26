@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>State Election Terminal - Voting Kiosk</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Barlow+Condensed:wght@300;400;600;700;800&display=swap');
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:     #08090F;
+  --blue:   #3B82F6;
+  --purple: #8B5CF6;
+  --red:    #EF4444;
+  --gold:   #C8A96A;
+  --gold-l: #E8D09A;
+  --fg:     #F0EDE8;
+  --dim:    rgba(240,237,232,0.4);
+  --ui-scale: 1;
+}
+
+body {
+  width:100vw;
+  height:100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family:'Barlow Condensed', sans-serif;
+  overflow-x:hidden;
+  overflow-y:auto; /* Allows scrolling if you add dozens of buttons */
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding: 60px 20px;
+  position:relative;
+  font-size: calc(16px * var(--ui-scale));
+}
+
+/* Authentic Grain Mask Layer */
+body::after {
+  content:''; position:fixed; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:50; opacity:.7;
+}
+
+/* Ambient Blue/Red Backlighting */
+.glow-left { position:fixed; left:-100px; top:50%; transform:translateY(-50%); width:400px; height:600px; background:radial-gradient(ellipse, rgba(178,34,34,0.06) 0%, transparent 70%); pointer-events:none; }
+.glow-right { position:fixed; right:-100px; top:50%; transform:translateY(-50%); width:400px; height:600px; background:radial-gradient(ellipse, rgba(26,79,138,0.06) 0%, transparent 70%); pointer-events:none; }
+
+/* Structural Tech Alignment Grid */
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image: linear-gradient(rgba(200,169,106,0.02) 1px, transparent 1px), linear-gradient(90deg,rgba(200,169,106,0.02) 1px,transparent 1px);
+  background-size:80px 80px; pointer-events:none;
+}
+
+/* Linear Frame Rules */
+.corner { position:fixed; width:64px; height:64px; border-color:rgba(200,169,106,0.25); border-style:solid; z-index: 100; }
+.c-tl { top:24px; left:24px; border-width:2px 0 0 2px; }
+.c-tr { top:24px; right:24px; border-width:2px 2px 0 0; }
+.c-bl { bottom:24px; left:24px; border-width:0 0 2px 2px; }
+.c-br { bottom:24px; right:24px; border-width:0 2px 2px 0; }
+
+.h-rule-top, .h-rule-bot { position:fixed; left:0; right:0; height:6px; z-index: 100; background:linear-gradient(90deg, var(--blue) 0%, var(--purple) 50%, var(--red) 100%); }
+.h-rule-top { top:0; }
+.h-rule-bot { bottom:0; }
+
+/* Header Layout */
+.header-area { text-align:center; margin-bottom: 40px; z-index: 10; }
+.headline { font-family:'Cormorant Garamond', serif; font-size:clamp(44px, 5vw, 68px); font-weight:700; line-height:0.95; letter-spacing:-1px; color:var(--fg); }
+.headline em { color:var(--gold); font-style:normal; }
+.rule { width:240px; height:1.5px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin: 15px auto; }
+.tagline { font-size:14px; letter-spacing:6px; text-transform:uppercase; color:var(--dim); font-weight:300; }
+
+/* Main Dynamic Kiosk Grid Wrapper */
+.kiosk-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 30px;
+  width: 100%;
+  max-width: 1200px;
+  z-index: 10;
+  margin-bottom: 60px;
+}
+
+/* ========================================== */
+/* TEMPLATE: MODULE COMPONENT (THE ELECTION BOX) */
+/* ========================================== */
+.election-card {
+  background: rgba(13, 15, 24, 0.65);
+  border: 1px solid rgba(200, 169, 106, 0.15);
+  backdrop-filter: blur(12px);
+  border-radius: 6px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: border-color 0.3s ease;
+}
+.election-card:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+/* Category Title Styling */
+.category-header {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold-l);
+  border-bottom: 1px solid rgba(240,237,232,0.1);
+  padding-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+/* Button Container Matrix */
+.btn-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ========================================== */
+/* TEMPLATE: THE BUTTON STYLES                */
+/* ========================================== */
+.btn-voter-choice {
+  width: 100%;
+  padding: 12px 20px;
+  background: rgba(240, 237, 232, 0.03);
+  border: 1px solid rgba(240, 237, 232, 0.15);
+  color: var(--fg);
+  border-radius: 4px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+/* Hover effects for regular buttons */
+.btn-voter-choice:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: var(--purple);
+  color: #fff;
+  padding-left: 26px; /* Subtle slick push effect */
+}
+
+/* Action Indicator Symbol inside the button */
+.btn-voter-choice::after {
+  content: "➔";
+  font-size: 14px;
+  color: var(--gold);
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+.btn-voter-choice:hover::after {
+  opacity: 1;
+}
+
+/* Specialized Party Color Variations for the buttons (Optional helpers) */
+.btn-voter-choice.nat-party:hover { border-color: var(--red); background: rgba(239, 68, 68, 0.1); }
+.btn-voter-choice.fed-party:hover { border-color: var(--blue); background: rgba(59, 130, 246, 0.1); }
+
+/* Ticker Footer styles */
+.ticker-wrap { position:fixed; bottom:20px; left:40px; right:40px; height:40px; overflow:hidden; z-index:20; pointer-events: none;}
+.ticker { display:inline-flex; white-space:nowrap; animation:ticker 35s linear infinite; font-size:18px; letter-spacing:5px; text-transform:uppercase; color:rgba(180,160,255,0.25); }
+@keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
+
+@media (min-width: 3000px) {
+  :root { --ui-scale: 1.5; }
+}
+</style>
+</head>
+<body>
+
+<div class="glow-left"></div>
+<div class="glow-right"></div>
+
+<div class="h-rule-top"></div>
+<div class="h-rule-bot"></div>
+
+<div class="corner c-tl"></div>
+<div class="corner c-tr"></div>
+<div class="corner c-bl"></div>
+<div class="corner c-br"></div>
+
+<div class="header-area">
+  <div class="headline">Secure Ballot Central<br><em>Official Election Dashboard</em></div>
+  <div class="rule"></div>
+  <div class="tagline">Select a ballot category to lock in selection matrices</div>
+</div>
+
+<div class="kiosk-container">
+
+  <div class="election-card">
+    <div class="category-header">Verification Portals</div>
+    <div class="btn-matrix">
+      <button class="btn-voter-choice" onclick="selectBallot('Governor')">Gubernatorial Race</button>
+      <button class="btn-voter-choice" onclick="selectBallot('LtGovernor')">Lieutenant Governor</button>
+      <button class="btn-voter-choice" onclick="selectBallot('StateProp1')">State Proposition 01</button>
+    </div>
+  </div>
+  <div class="election-card">
+    <div class="category-header">District Measures</div>
+    <div class="btn-matrix">
+      <button class="btn-voter-choice" onclick="selectBallot('DistSenate')">District Senate Seats</button>
+      <button class="btn-voter-choice" onclick="selectBallot('DistJudicial')">Judicial Court Circuit</button>
+    </div>
+  </div>
+  <div class="election-card">
+    <div class="category-header">County Seats (8 Jurisdictions)</div>
+    <div class="btn-matrix">
+      <button class="btn-voter-choice" onclick="selectBallot('CountySheriff')">County Sheriff Office</button>
+      <button class="btn-voter-choice" onclick="selectBallot('CountyAssessor')">Tax Revenue Assessor</button>
+      <button class="btn-voter-choice" onclick="selectBallot('CountyClerk')">Circuit Court Clerk</button>
+    </div>
+  </div>
+  <div class="election-card">
+    <div class="category-header">City Municipal (16 Jurisdictions)</div>
+    <div class="btn-matrix">
+      <button class="btn-voter-choice nat-party" onclick="selectBallot('Mayor')">Mayoral Executive Office</button>
+      <button class="btn-voter-choice fed-party" onclick="selectBallot('CityCouncil')">City Council Ward Seats</button>
+      <button class="btn-voter-choice" onclick="selectBallot('SchoolBoard')">Public Education Board</button>
+    </div>
+  </div>
+  </div>
+
+<div class="ticker-wrap">
+  <div class="ticker">
+    SECURE KIOSK ENVIROMENT &nbsp;&nbsp;·&nbsp;&nbsp; BALLOT ENCRYPTIONS ACTIVE &nbsp;&nbsp;·&nbsp;&nbsp; COMPLETE SELECTION RUNS SECURELY &nbsp;&nbsp;·&nbsp;&nbsp; SECURE KIOSK ENVIROMENT &nbsp;&nbsp;·&nbsp;&nbsp; BALLOT ENCRYPTIONS ACTIVE &nbsp;&nbsp;·&nbsp;&nbsp; COMPLETE SELECTION RUNS SECURELY &nbsp;&nbsp;·&nbsp;&nbsp;
+  </div>
+</div>
+
+<script>
+// Logic processing block execution when a ballot is targeted
+function selectBallot(ballotId) {
+    console.log("Routing voter matrix destination payload to: " + ballotId);
+    alert("Navigating Execution Target: " + ballotId.toUpperCase());
+    
+    // This is where you would place your routing window redirects later, like:
+    // window.location.href = "ballot.html?race=" + ballotId;
+}
+</script>
+
+</body>
+</html>
