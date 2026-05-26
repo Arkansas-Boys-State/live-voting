@@ -435,9 +435,29 @@ async function poll() {
     const data = await res.json();
     const entries = data[PARTY_KEY];
     if (!Array.isArray(entries) || !entries.length) return;
+    
     const latest = entries[entries.length - 1];
+    
+    // SAFETY CHECK: If the entry timestamp is older than 15 seconds, 
+    // ignore it so it doesn't force-fade the idle screen logo.
+    const entryTime = latest.ts ? new Date(latest.ts).getTime() : 0;
+    const rightNow = new Date().getTime();
+    if (entryTime > 0 && (rightNow - entryTime) > 15000) {
+      // It's an old entry, make sure we are showing the idle logo
+      if (idle.classList.contains('hidden')) {
+        idle.classList.remove('hidden');
+        conf.classList.remove('visible');
+        conf.style.opacity = '0';
+        conf.style.position = 'absolute';
+      }
+      return;
+    }
+
     const key = latest.ts || JSON.stringify(latest);
-    if (key !== lastSeen) { lastSeen = key; showVoter(latest); }
+    if (key !== lastSeen) { 
+      lastSeen = key; 
+      showVoter(latest); 
+    }
   } catch(e) {}
 }
 
