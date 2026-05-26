@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arkansas Boys State - Secretary of State</title>
+<script src="config.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Barlow+Condensed:wght@300;400;600;700;800&display=swap');
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:     #08090F;
+
+  /* Theme Palette */
+  --blue:   #3B82F6;
+  --purple: #8B5CF6;
+  --red:    #EF4444;
+
+  --gold:   #C8A96A;
+  --gold-l: #E8D09A;
+  --fg:     #F0EDE8;
+  --dim:    rgba(240,237,232,0.4);
+
+  /* Party colors */
+  --nat:    #EF4444;
+  --fed:    #3B82F6;
+
+  /* Global scaling */
+  --ui-scale: 1;
+}
+
+body {
+  width:100vw;
+  height:100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family:'Barlow Condensed', sans-serif;
+  overflow:hidden;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  position:relative;
+  font-size: calc(16px * var(--ui-scale));
+}
+
+/* Grain Effect */
+body::after {
+  content:''; position:fixed; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:50; opacity:.7;
+}
+
+/* Ambient glows */
+.glow-left {
+  position:fixed; left:-100px; top:50%; transform:translateY(-50%);
+  width:400px; height:600px;
+  background:radial-gradient(ellipse, rgba(178,34,34,0.08) 0%, transparent 70%);
+  pointer-events:none;
+  z-index: 2;
+}
+.glow-right {
+  position:fixed; right:-100px; top:50%; transform:translateY(-50%);
+  width:400px; height:600px;
+  background:radial-gradient(ellipse, rgba(26,79,138,0.08) 0%, transparent 70%);
+  pointer-events:none;
+  z-index: 2;
+}
+
+/* Background Scrolling Names Container */
+.bg-scroll-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  opacity: 0.12; /* Kept subtle so it doesn't distract from the text */
+  pointer-events: none;
+  z-index: 1;
+}
+
+.name-column {
+  display: flex;
+  flex-direction: column;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+/* Alternating scroll directions for visual depth */
+.scroll-down { animation: scrollDown 45s linear infinite; }
+.scroll-up { animation: scrollUp 50s linear infinite; }
+
+/* Stagger speeds a bit */
+.name-column:nth-child(even) .scroll-down { animation-duration: 60s; }
+.name-column:nth-child(even) .scroll-up { animation-duration: 55s; }
+
+@keyframes scrollDown {
+  0% { transform: translateY(-50%); }
+  100% { transform: translateY(0%); }
+}
+
+@keyframes scrollUp {
+  0% { transform: translateY(0%); }
+  100% { transform: translateY(-50%); }
+}
+
+.name-item {
+  padding: 15px 0;
+  text-align: center;
+}
+
+/* Corner frames */
+.corner { position:fixed; width:64px; height:64px; border-color:rgba(200,169,106,0.25); border-style:solid; z-index: 10;}
+.c-tl { top:24px; left:24px; border-width:2px 0 0 2px; }
+.c-tr { top:24px; right:24px; border-width:2px 2px 0 0; }
+.c-bl { bottom:24px; left:24px; border-width:0 0 2px 2px; }
+.c-br { bottom:24px; right:24px; border-width:0 2px 2px 0; }
+
+/* Top & bottom rule */
+.h-rule-top, .h-rule-bot {
+  position:fixed; left:0; right:0; height:6px; z-index: 10;
+  background:linear-gradient(90deg, var(--blue) 0%, var(--purple) 50%, var(--red) 100%);
+}
+.h-rule-top { top:0; }
+.h-rule-bot { bottom:0; }
+
+/* Main content */
+.center {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:24px;
+  text-align:center;
+  z-index:10;
+  padding:40px 60px;
+  max-width:1100px;
+  background: rgba(8, 9, 15, 0.75); /* Slight backing to keep text fully legible over names */
+  backdrop-filter: blur(4px);
+  border-radius: 16px;
+  border: 1px solid rgba(200,169,106,0.05);
+}
+
+/* Logo area */
+.logo-wrap {
+  width:260px;
+  height:260px;
+  border:2px solid rgba(200,169,106,0.3);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  background:rgba(200,169,106,0.03);
+  margin-bottom: 5px;
+}
+
+.logo-ring {
+  position:absolute; inset:-12px;
+  border-radius:50%;
+  border:1px dashed rgba(200,169,106,0.2);
+  animation: spin 60s linear infinite;
+}
+@keyframes spin { to{ transform:rotate(360deg); } }
+
+.logo-glow {
+  position:absolute; inset:-30px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(200,169,106,0.06) 0%, transparent 70%);
+  animation:breathe 4s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,100%{ transform:scale(1); opacity:.7; }
+  50%{ transform:scale(1.1); opacity:1; }
+}
+
+.logo-img {
+  width:180px;
+  height:180px;
+  object-fit:contain;
+  display:block;
+}
+
+/* Title block */
+.headline {
+  font-family:'Cormorant Garamond', serif;
+  font-size:clamp(54px, 6vw, 85px);
+  font-weight:700;
+  line-height:0.95;
+  letter-spacing:-1px;
+  color:var(--fg);
+}
+.headline em { color:var(--gold); font-style:normal; }
+.headline span { font-size: clamp(32px, 4vw, 48px); font-family: 'Barlow Condensed', sans-serif; font-weight: 400; letter-spacing: 4px; display: block; margin-bottom: 10px; color: var(--dim); }
+
+.rule { width:140px; height:1.5px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+
+.tagline {
+  font-size:clamp(18px,2vw,24px);
+  letter-spacing:8px;
+  text-transform:uppercase;
+  color:var(--gold-l);
+  font-weight:400;
+}
+
+/* Party strip */
+.party-strip {
+  display:flex;
+  align-items:center;
+  gap:40px;
+}
+
+.party-pill {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:14px 28px;
+  border:2px solid;
+  border-radius:6px;
+  font-size:24px;
+  font-weight:800;
+  letter-spacing:4px;
+  text-transform:uppercase;
+}
+
+.fed-pill {
+  border-color:rgba(59,130,246,0.5);
+  color:#B9D4FF;
+  background:rgba(59,130,246,0.08);
+}
+
+.nat-pill {
+  border-color:rgba(239,68,68,0.5);
+  color:#FFB4B4;
+  background:rgba(239,68,68,0.08);
+}
+
+.vs-badge {
+  font-family:'Cormorant Garamond', serif;
+  font-size:36px;
+  font-style:italic;
+  color:var(--purple);
+  opacity:.9;
+}
+
+/* Year Ring / Badge */
+.year-ring {
+  border:2px solid rgba(200,169,106,0.35);
+  padding:12px 24px;
+  font-size:18px;
+  font-weight:600;
+  letter-spacing:8px;
+  text-transform:uppercase;
+  color: var(--gold);
+}
+
+/* Ticker */
+.ticker-wrap {
+  position:fixed; bottom:20px; left:40px; right:40px;
+  height:40px; overflow:hidden; z-index:20;
+}
+
+.ticker {
+  display:inline-flex; white-space:nowrap;
+  animation:ticker 35s linear infinite;
+  font-size:18px; letter-spacing:5px; text-transform:uppercase;
+  color:rgba(180,160,255,0.55);
+}
+
+@keyframes ticker {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@media (min-width: 3000px) {
+  :root { --ui-scale: 1.8; }
+  .center { transform: scale(1.15); }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-scroll-container" id="backgroundStreams"></div>
+
+<div class="glow-left"></div>
+<div class="glow-right"></div>
+
+<div class="h-rule-top"></div>
+<div class="h-rule-bot"></div>
+
+<div class="corner c-tl"></div>
+<div class="corner c-tr"></div>
+<div class="corner c-bl"></div>
+<div class="corner c-br"></div>
+
+<div class="center">
+  <div class="logo-wrap">
+    <div class="logo-glow"></div>
+    <div class="logo-ring"></div>
+    <div class="logo-placeholder">
+      <img class="logo-img" src="ARBS_Logo.png" alt="ARBS Logo">
+    </div>
+  </div>
+    
+  <div class="headline">
+    <span>Welcome to the</span>
+    Arkansas Boys State<br><em>Secretary of State's Office</em>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="tagline">Official Election Headquarters</div>
+
+  <div class="party-strip">
+    <div class="party-pill nat-pill">Nationalist Party</div>
+    <div class="vs-badge">&</div>
+    <div class="party-pill fed-pill">Federalist Party</div>
+  </div>
+
+  <div class="year-ring">Proceed To Desk For Assistance</div>
+</div>
+
+<div class="ticker-wrap">
+  <div class="ticker">
+    ARKANSAS BOYS STATE ELECTIONS PROCESSING CENTER &nbsp;&nbsp;·&nbsp;&nbsp; NATIONALISTS - LET FREEDOM FLY &nbsp;&nbsp;·&nbsp;&nbsp; PETITION SUBMISSIONS CLOSED &nbsp;&nbsp;·&nbsp;&nbsp; DEMOCRACY DEPENDS ON YOU &nbsp;&nbsp;·&nbsp;&nbsp; OPERATIONS HEADQUARTERS &nbsp;&nbsp;·&nbsp;&nbsp; FEDERALISTS - LET DEMOCRACY BLOOM &nbsp;&nbsp;·&nbsp;&nbsp; 
+  </div>
+</div>
+
+<script>
+// Default backup fallback names in case names.json is missing or fails to load
+const defaultNames = [
+  "Aaron Smith", "Ben Johnson", "Caleb Williams", "Daniel Brown", "Ethan Jones",
+  "Gavin Miller", "Henry Davis", "Ian Garcia", "Jack Rodriguez", "Luke Wilson",
+  "Mason Martinez", "Noah Anderson", "Owen Taylor", "Parker Thomas", "Ryan Moore",
+  "Samuel Jackson", "Thomas Martin", "William Lee", "Zachary Thompson", "Eli White"
+];
+
+// Helper to shuffle arrays randomly to mix up columns
+function shuffleArray(array) {
+  return array.sort(() => Math.random() - 0.5);
+}
+
+function renderBackgroundNames(namesList) {
+  const container = document.getElementById('backgroundStreams');
+  container.innerHTML = ''; // Clear previous items
+
+  // Calculate how many columns can fit horizontally across the screen width
+  const columnWidth = 220; 
+  const columnCount = Math.max(3, Math.floor(window.innerWidth / columnWidth));
+
+  for (let i = 0; i < columnCount; i++) {
+    const columnElement = document.createElement('div');
+    columnElement.className = 'name-column';
+    
+    // Alternate direction behavior per column
+    const isUp = i % 2 === 0;
+    const innerScrollWrapper = document.createElement('div');
+    innerScrollWrapper.className = isUp ? 'scroll-up' : 'scroll-down';
+
+    // Mix up the array per column for randomness
+    let shuffledNames = shuffleArray([...namesList]);
+    
+    // Duplicate the array to create a seamless looping structure for CSS keyframes
+    let displayList = [...shuffledNames, ...shuffledNames, ...shuffledNames];
+
+    displayList.forEach(name => {
+      const nameItem = document.createElement('div');
+      nameItem.className = 'name-item';
+      nameItem.innerText = name;
+      innerScrollWrapper.appendChild(nameItem);
+    });
+
+    columnElement.appendChild(innerScrollWrapper);
+    container.appendChild(columnElement);
+  }
+}
+
+// Fetch from your separate names.json file
+fetch('names.json')
+  .then(response => {
+    if (!response.ok) throw new Error("Could not find file");
+    return response.json();
+  })
+  .then(data => {
+    // Expecting structure: ["Name 1", "Name 2", ...] or { names: [...] }
+    const finalNames = Array.isArray(data) ? data : (data.names || defaultNames);
+    renderBackgroundNames(finalNames);
+  })
+  .catch(err => {
+    console.warn("names.json not found or failed to load. Using fallback local name pool.", err);
+    renderBackgroundNames(defaultNames);
+  });
+
+// Re-render columns on window resize to perfectly scale responsive screens smoothly
+window.addEventListener('resize', () => {
+  fetch('names.json')
+    .then(res => res.json())
+    .then(data => renderBackgroundNames(Array.isArray(data) ? data : (data.names || defaultNames)))
+    .catch(() => renderBackgroundNames(defaultNames));
+});
+</script>
+</body>
+</html>
