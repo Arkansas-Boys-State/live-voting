@@ -272,20 +272,23 @@ body::before {
 
   <div class="admin-badge">Secure Administrative Gateway</div>
 </div>
-
+<!--
 <div class="ticker-wrap">
   <div class="ticker">
     SECURE CONTROL PORTAL &nbsp;&nbsp;·&nbsp;&nbsp; AUTHORIZED OPERATORS ONLY &nbsp;&nbsp;·&nbsp;&nbsp; RESTRICTED DIRECTORY ACCESS &nbsp;&nbsp;·&nbsp;&nbsp; AUDIT TRAILS ACTIVE &nbsp;&nbsp;·&nbsp;&nbsp; SECURE CONTROL PORTAL &nbsp;&nbsp;·&nbsp;&nbsp; AUTHORIZED OPERATORS ONLY &nbsp;&nbsp;·&nbsp;&nbsp; RESTRICTED DIRECTORY ACCESS &nbsp;&nbsp;·&nbsp;&nbsp; AUDIT TRAILS ACTIVE &nbsp;&nbsp;·&nbsp;&nbsp;
   </div>
 </div>
+-->
 
 <script>
+/**
 // Prompt for security wall right at compilation
 const password = prompt("Provide Administrative Passkey Sequence:");
 if (password !== "YourSecretSuperPassword123") {
     alert("Access Sequence Rejected.");
     window.location.href = "../index.html"; 
 }
+**/
 
 // Global path config pulling from your config.js script
 const APPS_SCRIPT_URL = "YOUR_DEPLOYED_WEB_APP_URL_HERE";

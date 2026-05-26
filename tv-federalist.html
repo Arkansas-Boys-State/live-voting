@@ -141,6 +141,11 @@ body::after {
   position:relative;
   background: rgba(200,169,106,0.02);
   animation: spin 60s linear infinite;
+
+  /* FIXES THE VANISHING BUG: Move filter here & force GPU composite layer */
+  filter: drop-shadow(0 0 15px var(--slate-glow));
+  will-change: transform;
+  transform: translate3d(0,0,0);
 }
 .idle-emblem::before {
   content: '· · · · · · · · · · · · · · · ·';
@@ -170,7 +175,8 @@ body::after {
   width: 250px;
   height: 250px;
   object-fit: contain;
-  filter: drop-shadow(0 0 15px var(--slate-glow));
+  
+  /* REMOVED: filter: drop-shadow(...) moved to parent */
   
   /* Counter-rotation to keep the logo right side up while ring spins */
   animation: spin 60s linear infinite reverse; 
