@@ -132,7 +132,7 @@ body::after {
 }
 #idle.hidden { opacity:0; pointer-events:none; position:absolute; }
 
-/* Enlarged Logo Ring Setup */
+/* Fixed Layout Layering System for Outer Emblem Ring */
 .idle-emblem {
   width:280px; height:280px;
   border:2px solid rgba(200,169,106,0.3);
@@ -140,13 +140,15 @@ body::after {
   display:flex; align-items:center; justify-content:center;
   position:relative;
   background: rgba(200,169,106,0.02);
+  
+  /* CRITICAL STABILIZATION: Move animation to layout compositor */
   animation: spin 60s linear infinite;
-
-  /* FIXES THE VANISHING BUG: Move filter here & force GPU composite layer */
-  filter: drop-shadow(0 0 15px var(--slate-glow));
+  transform: translateZ(0);
+  backface-visibility: hidden;
   will-change: transform;
-  transform: translate3d(0,0,0);
+  z-index: 1;
 }
+
 .idle-emblem::before {
   content: '· · · · · · · · · · · · · · · ·';
   position: absolute; 
@@ -170,16 +172,22 @@ body::after {
 }
 @keyframes spin { to{ transform:rotate(360deg); } }
 
-/* SVG Logo Styling */
+/* SVG Logo Styling — Completely detached from parent layouts to prevent drops */
 .idle-logo-svg {
   width: 250px;
   height: 250px;
   object-fit: contain;
+  position: relative;
   
-  /* REMOVED: filter: drop-shadow(...) moved to parent */
+  /* FORCE STABLE RENDERING LAYER */
+  transform: translate3d(0, 0, 0) scale(1);
+  backface-visibility: hidden;
+  will-change: transform;
+  filter: blur(0); /* Forces layout engine pixel snapping lock */
   
   /* Counter-rotation to keep the logo right side up while ring spins */
   animation: spin 60s linear infinite reverse; 
+  z-index: 5;
 }
 
 .idle-h {
@@ -268,7 +276,16 @@ body::after {
 
 .countdown-wrap { display:flex; align-items:center; gap:10px; }
 .countdown-label { font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--fg-dim); }
-#countdownNum { font-size:18px; font-weight:700; color:var(--party-light); min-width:24px; }
+/* Fixed width block to stop text-shifting from triggering body re-paints */
+#countdownNum { 
+  font-size:18px; 
+  font-weight:700; 
+  color:var(--party-light); 
+  display: inline-block;
+  min-width: 75px; 
+  text-align: left;
+  font-variant-numeric: tabular-nums; /* Forces monotonic spacing rules */
+}
 
 .timer-track { width:180px; height:3px; background:rgba(200,169,106,0.12); border-radius:2px; overflow:hidden; }
 .timer-fill { height:100%; width:100%; background:linear-gradient(90deg,var(--party),var(--party-light)); transform-origin:left; transition:none; }
