@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Ballot Integrity & Audit Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Barlow+Condensed:wght@300;400;600;700;800&display=swap');
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:     #08090F;
+  --blue:   #3B82F6;
+  --purple: #8B5CF6;
+  --red:    #EF4444;
+  --gold:   #C8A96A;
+  --gold-l: #E8D09A;
+  --fg:     #F0EDE8;
+  --dim:    rgba(240,237,232,0.4);
+  --ui-scale: 1;
+}
+
+body {
+  width:100vw;
+  min-height:100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.05em;
+  font-weight: 400;
+  overflow-x: hidden;
+  padding: 60px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+body::before {
+  content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 35vh;
+  background: linear-gradient(180deg, rgba(200,169,106,0.06) 0%, rgba(0,0,0,0) 100%);
+  pointer-events: none; z-index: 1;
+}
+body::after {
+  content: ""; position: fixed; bottom: 0; left: 0; width: 100vw; height: 35vh;
+  background: linear-gradient(0deg, rgba(139,92,246,0.03) 0%, rgba(0,0,0,0) 100%);
+  pointer-events: none; z-index: 1;
+}
+
+.core-container {
+  width: 100%;
+  max-width: 750px;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 40px 60px;
+  background: rgba(13, 15, 24, 0.65);
+  border: 1px solid rgba(200, 169, 106, 0.15);
+  backdrop-filter: blur(12px);
+  border-radius: 8px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  margin: auto 0;
+  text-align: center;
+}
+
+.core-container.has-results {
+  margin-top: 40px;
+  margin-bottom: 24px;
+}
+
+header h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(44px, 5vw, 68px);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -1px;
+  color: var(--fg);
+  text-transform: uppercase;
+}
+header h1 em { color: var(--gold); font-style: normal; }
+
+.rule { width: 140px; height: 1.5px; background: linear-gradient(90deg,transparent,var(--gold),transparent); margin: 12px auto; }
+
+header p {
+  font-size: 16px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--dim);
+  font-weight: 300;
+}
+
+.panel-node { width: 100%; position: relative; }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.file-wrapper { position: relative; width: 100%; border: 2px dashed rgba(139, 92, 246, 0.3); background: rgba(139, 92, 246, 0.02); border-radius: 6px; padding: 40px 20px; cursor: pointer; transition: all 0.3s ease; }
+.file-wrapper:hover { border-color: var(--purple); background: rgba(139, 92, 246, 0.06); }
+.file-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 5; }
+
+.file-label {
+  color: var(--fg); font-size: 20px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;
+}
+.file-specs { font-size: 13px; color: var(--dim); letter-spacing: 1px; margin-top: 4px; }
+
+.btn-prime {
+  display: inline-block; width: 100%; padding: 16px 32px; border: 2px solid rgba(59, 130, 246, 0.6); background: rgba(59, 130, 246, 0.1); color: #B9D4FF; border-radius: 4px; font-size: 22px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; cursor: pointer; transition: all 0.2s ease;
+}
+.btn-prime:hover:not(:disabled) { border-color: var(--blue); background: rgba(59, 130, 246, 0.25); color: #fff; box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+.btn-prime:disabled { border-color: rgba(240,237,232,0.1); background: rgba(240,237,232,0.02); color: var(--dim); cursor: not-allowed; box-shadow: none; }
+
+/* Real-Time Telemetry Tracking Progress Bar Rules */
+.progress-container { width: 100%; display: none; flex-direction: column; gap: 6px; text-align: left; }
+.progress-track { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(200, 169, 106, 0.1); border-radius: 2px; overflow: hidden; }
+.progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--blue), var(--purple)); box-shadow: 0 0 8px var(--purple); transition: width 0.1s linear; }
+.progress-meta { display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; letter-spacing: 1px; color: var(--dim); }
+
+#statusMessage {
+  width: 100%; background: #040508; border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; padding: 16px; font-family: monospace; font-size: 14px; letter-spacing: 1px; text-align: left; color: #8B5CF6; min-height: 54px; max-height: 120px; overflow-y: auto;
+}
+.system-ready { color: #A7F3D0; }
+.system-working { color: #FDE047; }
+.system-error { color: #FCA5A5; }
+
+.admin-badge { border: 1px solid rgba(139,92,246,0.35); padding: 10px 20px; font-size: 14px; font-weight: 600; letter-spacing: 6px; text-transform: uppercase; color: rgba(200,169,255,0.75); margin-top: 10px; }
+
+/* System Data Output Display Engine */
+.results-container { width: 100%; max-width: 1100px; position: relative; z-index: 10; display: flex; flex-direction: column; gap: 40px; padding: 0 20px; margin-bottom: 40px; }
+.section-node { display: none; background: rgba(13, 15, 24, 0.65); border: 1px solid rgba(200, 169, 106, 0.15); backdrop-filter: blur(12px); border-radius: 8px; padding: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+.section-node h2 { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 700; text-transform: uppercase; margin-bottom: 25px; letter-spacing: 0.05em; padding-bottom: 10px; }
+.dup-headline { color: var(--red); border-bottom: 1px solid rgba(239,68,68,0.15); text-shadow: 0 0 25px rgba(239,68,68,0.1); }
+.inv-headline { color: var(--gold); border-bottom: 1px solid rgba(200,169,106,0.15); text-shadow: 0 0 25px rgba(200,169,106,0.1); }
+
+.table-scroller { width: 100%; overflow-x: auto; background: #040508; border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th { background: rgba(240,237,232,0.02); color: var(--gold); font-size: 1.15rem; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 600; padding: 16px 24px; border-bottom: 1px solid rgba(240,237,232,0.08); }
+td { padding: 16px 24px; font-size: 1.15rem; color: var(--fg); border-bottom: 1px solid rgba(240,237,232,0.03); letter-spacing: 0.05em; }
+tr:hover td { background: rgba(240,237,232,0.02); }
+
+.badge-purge { border: 1px solid rgba(239,68,68,0.25); background: rgba(239,68,68,0.04); color: var(--red); padding: 4px 12px; font-weight: 600; text-transform: uppercase; font-size: 0.95rem; letter-spacing: 0.1em; display: inline-block; }
+.badge-suggest { border: 1px solid rgba(200,169,106,0.25); background: rgba(200,169,106,0.04); color: var(--gold-l); padding: 4px 12px; font-weight: 600; text-transform: uppercase; font-size: 0.95rem; letter-spacing: 0.1em; display: inline-block; }
+.index-marker { color: var(--dim); font-weight: 300; }
+</style>
+</head>
+<body>
+
+<div class="core-container">
+    <header>
+        <h1>Ballot Integrity<br><em>Telemetry Audit Core</em></h1>
+        <div class="rule"></div>
+        <p>Telemetry Audit & Core Validation</p>
+    </header>
+    
+    <main class="panel-node">
+        <div class="form-group">
+            <div class="file-wrapper">
+                <input type="file" id="fileInput" class="file-input" accept=".xlsx, .xls, .csv" onchange="handleFileSelect(event)">
+                <div id="fileLabel" class="file-label">Select Form Dataset</div>
+                <div class="file-specs">Supports Excel (.xlsx, .xls) and CSV targets</div>
+            </div>
+
+            <button id="auditBtn" class="btn-prime" disabled onclick="runBallotAudit()">Execute Core Audit</button>
+        </div>
+    </main>
+
+    <div class="progress-container" id="progressWrapper">
+      <div class="progress-track">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="progress-meta">
+        <span id="progressStatus">INITIALIZING STREAM...</span>
+        <span id="progressPercent">0%</span>
+      </div>
+    </div>
+    
+    <div id="statusMessage">
+        <span class="system-ready">SYSTEM CONFIGURATION ONLINE // AUDIT COMPILER READY...</span>
+    </div>
+
+    <div class="admin-badge">Secure Administrative Gateway</div>
+</div>
+
+<div class="results-container">
+    <section id="duplicateSection" class="section-node">
+        <h2 class="dup-headline">Double-Voting Telemetry Violations Detected</h2>
+        <div class="table-scroller">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Delegate ID</th>
+                        <th>Submitted Name</th>
+                        <th>Baseline Index</th>
+                        <th>Target Purge Action</th>
+                    </tr>
+                </thead>
+                <tbody id="duplicateTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="invalidSection" class="section-node">
+        <h2 class="inv-headline">Invalid Identification Structural Faults</h2>
+        <div class="table-scroller">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Form Placement</th>
+                        <th>Submitted ID</th>
+                        <th>Submitted Name</th>
+                        <th>Fuzzy Recommended ID</th>
+                        <th>Roster Registry Profile Match</th>
+                    </tr>
+                </thead>
+                <tbody id="invalidTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<script>
+    let parsedSheetData = null;
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwUizXV0uNUr8TTVhxqsXdm-1rCR9ZXlO7cjKgUSI-WTygri4F8TBnWxt36B08u--w/exec";
+    let progressInterval = null;
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        document.getElementById('fileLabel').innerText = file.name.toUpperCase();
+        document.getElementById('fileLabel').style.color = "var(--gold-l)";
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            const rawRows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+            
+            // Critical filter: eliminate empty lines or trailing array spaces immediately
+            parsedSheetData = rawRows.filter(row => row && row.length > 0 && row.some(cell => cell !== null && cell !== ""));
+            
+            document.getElementById('auditBtn').disabled = false;
+            
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.innerHTML = '<span class="system-ready">DATASTRUCTURE LINK SUCCESSFUL -> COMPILER READY.</span>';
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function startProgressTracking() {
+        const wrapper = document.getElementById('progressWrapper');
+        const bar = document.getElementById('progressBar');
+        const txtStatus = document.getElementById('progressStatus');
+        const txtPercent = document.getElementById('progressPercent');
+        
+        wrapper.style.display = 'flex';
+        bar.style.width = '0%';
+        txtPercent.innerText = '0%';
+        txtStatus.innerText = 'ESTABLISHING GOOGLE CLOUD HANDSHAKE...';
+        
+        let currentPercent = 0;
+        clearInterval(progressInterval);
+        
+        progressInterval = setInterval(() => {
+            if (currentPercent < 45) {
+                currentPercent += Math.floor(Math.random() * 8) + 4;
+            } else if (currentPercent < 80) {
+                txtStatus.innerText = 'CROSS-REFERENCING MASTER DELEGATE ENTRIES...';
+                currentPercent += Math.floor(Math.random() * 3) + 1;
+            } else if (currentPercent < 95) {
+                txtStatus.innerText = 'PROCESSING SYSTEM AUDIT ARRAYS...';
+                currentPercent += 1;
+            } else {
+                txtStatus.innerText = 'AWAITING INSTANCE DISPATCH FLUSH... (LIVE)';
+                clearInterval(progressInterval);
+            }
+            bar.style.width = currentPercent + '%';
+            txtPercent.innerText = currentPercent + '%';
+        }, 130);
+    }
+
+    function stopProgressTracking(isSuccess) {
+        clearInterval(progressInterval);
+        const bar = document.getElementById('progressBar');
+        const txtPercent = document.getElementById('progressPercent');
+        const txtStatus = document.getElementById('progressStatus');
+        
+        if (isSuccess) {
+            bar.style.width = '100%';
+            txtPercent.innerText = '100%';
+            txtStatus.innerText = 'COMPILATION CYCLE DISPATCH COMPLETE.';
+        } else {
+            bar.style.width = '0%';
+            txtPercent.innerText = 'ERR';
+            txtStatus.innerText = 'DATASTREAM CORRUPTED AT INSTANCE GATE.';
+        }
+    }
+
+    function runBallotAudit() {
+        if (!parsedSheetData) return;
+        
+        const statusDiv = document.getElementById('statusMessage');
+        const auditBtn = document.getElementById('auditBtn');
+        
+        statusDiv.innerHTML = '<span class="system-working">CROSS-REFERENCING ROSTER REGISTRY DATAMATRIX...</span>';
+        auditBtn.disabled = true;
+        startProgressTracking();
+
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({
+                action: "auditBallots",
+                data: parsedSheetData
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            auditBtn.disabled = false;
+            
+            if(!result.success) {
+                stopProgressTracking(false);
+                statusDiv.innerHTML = `<span class="system-error">PIPELINE ABORTED COMPILER ERROR: ${result.error.toUpperCase()}</span>`;
+                return;
+            }
+
+            stopProgressTracking(true);
+            document.querySelector('.core-container').classList.add('has-results');
+            statusDiv.innerHTML = `<span class="system-ready">AUDIT ARCHITECTURE SUCCESSFUL. COMPILED ${parsedSheetData.length - 1} VOTE ENTRIES.</span>`;
+
+            // Process Double Votes Matrix
+            const dupBody = document.getElementById('duplicateTableBody');
+            dupBody.innerHTML = "";
+            if(result.duplicates.length > 0) {
+                document.getElementById('duplicateSection').style.display = 'block';
+                result.duplicates.forEach(d => {
+                    dupBody.innerHTML += `<tr>
+                        <td><strong>${d.delegateId}</strong></td>
+                        <td>${d.submittedName.toUpperCase()}</td>
+                        <td class="index-marker">ROW ${d.originalFormRow}</td>
+                        <td><span class="badge-purge">PURGE ROW ${d.duplicateFormRow}</span></td>
+                    </tr>`;
+                });
+            } else {
+                document.getElementById('duplicateSection').style.display = 'none';
+            }
+
+            // Process Faulty Structural IDs Matrix
+            const invBody = document.getElementById('invalidTableBody');
+            invBody.innerHTML = "";
+            if(result.invalidIds.length > 0) {
+                document.getElementById('invalidSection').style.display = 'block';
+                result.invalidIds.forEach(i => {
+                    invBody.innerHTML += `<tr>
+                        <td class="index-marker">ROW ${i.formRow}</td>
+                        <td><span class="badge-purge">${i.submittedId}</span></td>
+                        <td>${i.submittedName.toUpperCase()}</td>
+                        <td><span class="badge-suggest">${i.suspectedCorrectId}</span></td>
+                        <td><strong>${i.rosterNameMatch.toUpperCase()}</strong></td>
+                    </tr>`;
+                });
+            } else {
+                document.getElementById('invalidSection').style.display = 'none';
+            }
+        })
+        .catch(err => {
+            stopProgressTracking(false);
+            statusDiv.innerHTML = `<span class="system-error">HARDWARE DESYNC TRAP EXCEPTION: AUDIT STREAM HALTED.</span>`;
+            auditBtn.disabled = false;
+        });
+    }
+</script>
+</body>
+</html>
